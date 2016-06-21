@@ -1,0 +1,9 @@
+Package: TMBdebug
+Type: Package
+Title: Package to simplify debugging on windows machines
+Version: 1.0
+Date: 2016-03-29
+Author: James Thorson <James.Thorson@noaa.gov>
+Maintainer: James Thorson <James.Thorson@noaa.gov>
+Description: Attempt to get debugging working when using TMB on windows machines
+License: What license is it under?
