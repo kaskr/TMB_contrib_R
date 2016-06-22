@@ -10,3 +10,9 @@ Install with ```devtools:::install_github(...)```.
 devtools::install_github("kaskr/TMB_contrib/TMBdebug")
 ```
 
+### TMBphase -- Wrapper for fitting models in TMB with phases (a la ADMB)
+* Designed to fit TMB models with phases, to allow sequential estimation of model parameters
+* Install using
+```R
+devtools::install_github("kaskr/TMB_contrib/TMBphase")
+```
