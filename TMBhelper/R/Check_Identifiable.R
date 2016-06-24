@@ -10,22 +10,24 @@
 #' @export
 Check_Identifiable = function( obj ){
   # Finite-different hessian
-  Hess = optimHess( par=obj$env$last.par.best, fn=obj$fn, gr=obj$gr )
+  List = NULL
+  List[["Hess"]] = optimHess( par=obj$env$last.par.best, fn=obj$fn, gr=obj$gr )
 
   # Check eigendecomposition
-  Eigen = eigen( Hess )
-  Which = which( Eigen$values < sqrt(.Machine$double.eps) )
+  List[["Eigen"]] = eigen( List[["Hess"]] )
+  List[["WhichBad"]] = which( List[["Eigen"]]$values < sqrt(.Machine$double.eps) )
+
+  # Check for parameters
+  RowMax = apply( List[["Eigen"]]$vectors[,List[["WhichBad"]]], MARGIN=1, FUN=function(vec){max(abs(vec))} )
+  List[["BadParams"]] = data.frame("Param"=names(obj$par), "MLE"=obj$env$last.par.best, ifelse(RowMax>0.1, "Bad","OK"))
+
+  # Message
+  if( length(List[["WhichBad"]])==0 ){
+    print( "All are identifiable" )
+  }else{
+    print( List[["BadParams"]] )
+  }
 
   # Return
-  List = NULL
-  if( length(Which)==0 ){
-    List[["Message"]] = "All are identifiable"
-  }else{
-    List[["Message"]] = data.frame( names(obj$par), Eigen$vectors[,Which] )
-  }
-  List[["Hess"]] = H
-
-  # Message and return
-  print( List[["Message"]] )
-  return( List )
+  return( invisible(List) )
 }
