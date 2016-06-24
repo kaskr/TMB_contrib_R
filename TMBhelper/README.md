@@ -1,2 +1,2 @@
-# TMB-debug
-Debugger for windows machines when running Template Model Builder, developed by Kasper Kristensen
+# TMBhelper
+User-contributed functions to help run TMB

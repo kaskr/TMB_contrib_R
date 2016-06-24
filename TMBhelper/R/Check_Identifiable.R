@@ -7,6 +7,7 @@
 #'
 #' @return A tagged list of the hessian and the message
 
+#' @export
 Check_Identifiable = function( obj ){
   # Finite-different hessian
   Hess = optimHess( par=obj$env$last.par.best, fn=obj$fn, gr=obj$gr )
