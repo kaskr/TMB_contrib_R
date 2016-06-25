@@ -10,8 +10,9 @@
 #' @export
 Check_Identifiable = function( obj ){
   # Finite-different hessian
+  ParHat = TMBhelper:::extract_fixed( obj )
   List = NULL
-  List[["Hess"]] = optimHess( par=obj$env$last.par.best, fn=obj$fn, gr=obj$gr )
+  List[["Hess"]] = optimHess( par=ParHat, fn=obj$fn, gr=obj$gr )
 
   # Check eigendecomposition
   List[["Eigen"]] = eigen( List[["Hess"]] )
@@ -19,11 +20,11 @@ Check_Identifiable = function( obj ){
 
   # Check for parameters
   RowMax = apply( List[["Eigen"]]$vectors[,List[["WhichBad"]]], MARGIN=1, FUN=function(vec){max(abs(vec))} )
-  List[["BadParams"]] = data.frame("Param"=names(obj$par), "MLE"=obj$env$last.par.best, ifelse(RowMax>0.1, "Bad","OK"))
+  List[["BadParams"]] = data.frame("Param"=names(obj$par), "MLE"=ParHat, ifelse(RowMax>0.1, "Bad","OK"))
 
   # Message
   if( length(List[["WhichBad"]])==0 ){
-    print( "All are identifiable" )
+    message( "All parameters are identifiable" )
   }else{
     print( List[["BadParams"]] )
   }
