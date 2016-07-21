@@ -6,6 +6,7 @@ Install with ```devtools:::install_github(...)```.
 ### TMBhelper -- Dumping ground for useful contributed R functions
 Includes
 * AICTMB -- calculate AIC based on model output
+* Check_Identifiable -- automatically check for non-identiable fixed effects
 
 Install using
 ```R
