@@ -9,6 +9,8 @@
 #' @param upper upper bounds on fixed effects
 #' @param getsd Boolean whether to run standard error calculation
 #' @param control list of options to pass to \code{nlminb}
+#' @param savedir directory to save results (if \code{savedir=NULL}, then results aren't saved)
+#' @param loopnum number of times to re-start optimization (where \code{loopnum=3} sometimes achieves a lower final gradient than \code{loopnum=1})
 #' @param ... list of settings to pass to \code{sdreport}
 #'
 #' @return the standard output from \code{nlminb}, except with additional diagnostics and timing info, and a new slot containing the output from \code{sdreport}
@@ -17,10 +19,17 @@
 #' TMBhelper::Optimize( Obj ) # where Obj is a compiled TMB object
 
 #' @export
-Optimize = function( obj, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)), getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=TRUE), ... ){
-  # Run
+Optimize = function( obj, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)), getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=TRUE),
+  savedir=NULL, loopnum=3, ... ){
+
+  # Run first time
   start_time = Sys.time()
   opt = nlminb( start=startpar, objective=obj$fn, gradient=obj$gr, control=control )
+
+  # Re-run to further decrease final gradient
+  for( i in seq(2,loopnum,length=max(0,loopnum-1)) ){
+    opt = nlminb( start=opt$par, objective=obj$fn, gradient=obj$gr, control=control )
+  }
 
   # Add diagnostics
   opt[["run_time"]] = Sys.time() - start_time
@@ -28,6 +37,12 @@ Optimize = function( obj, startpar=obj$par, lower=rep(-Inf,length(startpar)), up
 
   # Get standard deviations
   if(getsd==TRUE) opt[["SD"]] = sdreport( obj, ... )
+
+  # Save results
+  if( !is.null(savedir) ){
+    save( opt, file=file.path(savedir,"opt.RData"))
+    capture.output( opt, file=file.path(savedir,"opt.txt"))
+  }
 
   # Return stuff
   return( opt )

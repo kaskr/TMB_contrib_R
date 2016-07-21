@@ -6,7 +6,8 @@
 \usage{
 Optimize(obj, startpar = obj$par, lower = rep(-Inf, length(startpar)),
   upper = rep(Inf, length(startpar)), getsd = TRUE,
-  control = list(eval.max = 10000, iter.max = 10000, trace = TRUE), ...)
+  control = list(eval.max = 10000, iter.max = 10000, trace = TRUE),
+  savedir = NULL, loopnum = 3, ...)
 }
 \arguments{
 \item{obj}{The compiled TMB object}
@@ -20,6 +21,10 @@ Optimize(obj, startpar = obj$par, lower = rep(-Inf, length(startpar)),
 \item{getsd}{Boolean whether to run standard error calculation}
 
 \item{control}{list of options to pass to \code{nlminb}}
+
+\item{savedir}{directory to save results (if \code{savedir=NULL}, then results aren't saved)}
+
+\item{loopnum}{number of times to re-start optimization (where \code{loopnum=3} sometimes achieves a lower final gradient than \code{loopnum=1})}
 
 \item{...}{list of settings to pass to \code{sdreport}}
 }
