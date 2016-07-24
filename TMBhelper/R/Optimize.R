@@ -24,11 +24,11 @@ Optimize = function( obj, startpar=obj$par, lower=rep(-Inf,length(startpar)), up
 
   # Run first time
   start_time = Sys.time()
-  opt = nlminb( start=startpar, objective=obj$fn, gradient=obj$gr, control=control )
+  opt = nlminb( start=startpar, objective=obj$fn, gradient=obj$gr, control=control, lower=lower, upper=upper )
 
   # Re-run to further decrease final gradient
   for( i in seq(2,loopnum,length=max(0,loopnum-1)) ){
-    opt = nlminb( start=opt$par, objective=obj$fn, gradient=obj$gr, control=control )
+    opt = nlminb( start=opt$par, objective=obj$fn, gradient=obj$gr, control=control, lower=lower, upper=upper )
   }
 
   # Add diagnostics
