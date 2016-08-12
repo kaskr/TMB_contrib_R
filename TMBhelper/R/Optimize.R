@@ -33,6 +33,8 @@ Optimize = function( obj, startpar=obj$par, lower=rep(-Inf,length(startpar)), up
 
   # Add diagnostics
   opt[["run_time"]] = Sys.time() - start_time
+  opt[["number_of_coefficients"]] = c("Total"=length(unlist(obj$env$parameters)), "Fixed"=length(obj$par), "Random"=length(unlist(obj$env$parameters))-length(obj$par) )
+  opt[["AIC"]] = 2*opt$objective + 2*length(opt$par)
   opt[["diagnostics"]] = data.frame( "Param"=names(obj$par), "starting_value"=startpar, "Lower"=lower, "MLE"=opt$par, "Upper"=upper, "final_gradient"=obj$gr(opt$par) )
 
   # Get standard deviations
