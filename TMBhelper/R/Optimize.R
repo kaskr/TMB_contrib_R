@@ -40,10 +40,8 @@ Optimize = function( obj, startpar=obj$par, lower=rep(-Inf,length(startpar)), up
   # Get standard deviations
   if(getsd==TRUE) opt[["SD"]] = sdreport( obj, ... )
 
-  # Save results
+  # Save results (excluding 'env' which is too big to routinely archive)
   if( !is.null(savedir) ){
-    save( opt, file=file.path(savedir,"opt.RData"))
-    capture.output( opt, file=file.path(savedir,"opt.txt"))
   }
 
   # Return stuff
