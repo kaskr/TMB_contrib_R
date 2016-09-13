@@ -42,6 +42,10 @@ Optimize = function( obj, startpar=obj$par, lower=rep(-Inf,length(startpar)), up
 
   # Save results (excluding 'env' which is too big to routinely archive)
   if( !is.null(savedir) ){
+    parameter_estimates = opt
+    parameter_estimates$SD = parameter_estimates$SD[ setdiff(names(parameter_estimates$SD),"env") ]
+    save( parameter_estimates, file=file.path(savedir,"parameter_estimates.RData"))
+    capture.output( parameter_estimates, file=file.path(savedir,"parameter_estimates.txt"))
   }
 
   # Return stuff
