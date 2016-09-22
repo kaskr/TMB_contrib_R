@@ -10,8 +10,8 @@
 
 #' @export
 TMBAIC=function(opt, k=2){
-  if( all(c("par","objective") %in% names(opt)) ) Return = 2*length(opt[["par"]]) + k*opt[["objective"]]
-  if( all(c("par","value") %in% names(opt)) ) Return = 2*length(opt[["par"]]) + k*opt[["value"]]
+  if( all(c("par","objective") %in% names(opt)) ) Return = k*length(opt[["par"]]) + 2*opt[["objective"]]
+  if( all(c("par","value") %in% names(opt)) ) Return = k*length(opt[["par"]]) + 2*opt[["value"]]
   return( Return )
 }
 
