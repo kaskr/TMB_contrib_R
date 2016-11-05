@@ -11,6 +11,7 @@
 #' @param control list of options to pass to \code{nlminb}
 #' @param savedir directory to save results (if \code{savedir=NULL}, then results aren't saved)
 #' @param loopnum number of times to re-start optimization (where \code{loopnum=3} sometimes achieves a lower final gradient than \code{loopnum=1})
+#' @param newtonsteps number of extra newton steps to take after optimization (alternative to \code{loopnum})
 #' @param ... list of settings to pass to \code{sdreport}
 #'
 #' @return the standard output from \code{nlminb}, except with additional diagnostics and timing info, and a new slot containing the output from \code{sdreport}
@@ -20,7 +21,7 @@
 
 #' @export
 Optimize = function( obj, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)), getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=TRUE),
-  savedir=NULL, loopnum=3, ... ){
+  savedir=NULL, loopnum=3, newtonsteps=0, ... ){
 
   # Run first time
   start_time = Sys.time()
@@ -31,6 +32,14 @@ Optimize = function( obj, startpar=obj$par, lower=rep(-Inf,length(startpar)), up
     opt = nlminb( start=opt$par, objective=obj$fn, gradient=obj$gr, control=control, lower=lower, upper=upper )
   }
 
+  ## Run some Newton steps
+  for(i in seq_len(newtonsteps)) {
+    g <- as.numeric( obj$gr(opt$par) )
+    h <- optimHess(opt$par, obj$fn, obj$gr)
+    opt$par <- opt$par - solve(h, g)
+    opt$objective <- obj$fn(opt$par)
+  }
+
   # Add diagnostics
   opt[["run_time"]] = Sys.time() - start_time
   opt[["number_of_coefficients"]] = c("Total"=length(unlist(obj$env$parameters)), "Fixed"=length(obj$par), "Random"=length(unlist(obj$env$parameters))-length(obj$par) )
@@ -38,7 +47,7 @@ Optimize = function( obj, startpar=obj$par, lower=rep(-Inf,length(startpar)), up
   opt[["diagnostics"]] = data.frame( "Param"=names(obj$par), "starting_value"=startpar, "Lower"=lower, "MLE"=opt$par, "Upper"=upper, "final_gradient"=obj$gr(opt$par) )
 
   # Get standard deviations
-  if(getsd==TRUE) opt[["SD"]] = sdreport( obj, ... )
+  if(getsd==TRUE) opt[["SD"]] = sdreport( obj, opt$par, ... )
 
   # Save results (excluding 'env' which is too big to routinely archive)
   if( !is.null(savedir) ){
