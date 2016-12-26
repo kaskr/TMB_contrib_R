@@ -7,7 +7,7 @@
 Optimize(obj, startpar = obj$par, lower = rep(-Inf, length(startpar)),
   upper = rep(Inf, length(startpar)), getsd = TRUE,
   control = list(eval.max = 10000, iter.max = 10000, trace = TRUE),
-  savedir = NULL, loopnum = 3, ...)
+  savedir = NULL, loopnum = 3, newtonsteps = 0, n = Inf, ...)
 }
 \arguments{
 \item{obj}{The compiled TMB object}
@@ -25,6 +25,10 @@ Optimize(obj, startpar = obj$par, lower = rep(-Inf, length(startpar)),
 \item{savedir}{directory to save results (if \code{savedir=NULL}, then results aren't saved)}
 
 \item{loopnum}{number of times to re-start optimization (where \code{loopnum=3} sometimes achieves a lower final gradient than \code{loopnum=1})}
+
+\item{newtonsteps}{number of extra newton steps to take after optimization (alternative to \code{loopnum})}
+
+\item{n}{sample sizes (if \code{n!=Inf} then \code{n} is used to calculate BIC and AICc)}
 
 \item{...}{list of settings to pass to \code{sdreport}}
 }

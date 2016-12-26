@@ -12,6 +12,7 @@
 #' @param savedir directory to save results (if \code{savedir=NULL}, then results aren't saved)
 #' @param loopnum number of times to re-start optimization (where \code{loopnum=3} sometimes achieves a lower final gradient than \code{loopnum=1})
 #' @param newtonsteps number of extra newton steps to take after optimization (alternative to \code{loopnum})
+#' @param n sample sizes (if \code{n!=Inf} then \code{n} is used to calculate BIC and AICc)
 #' @param ... list of settings to pass to \code{sdreport}
 #'
 #' @return the standard output from \code{nlminb}, except with additional diagnostics and timing info, and a new slot containing the output from \code{sdreport}
@@ -21,7 +22,7 @@
 
 #' @export
 Optimize = function( obj, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)), getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=TRUE),
-  savedir=NULL, loopnum=3, newtonsteps=0, ... ){
+  savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, ... ){
 
   # Run first time
   start_time = Sys.time()
@@ -43,7 +44,11 @@ Optimize = function( obj, startpar=obj$par, lower=rep(-Inf,length(startpar)), up
   # Add diagnostics
   opt[["run_time"]] = Sys.time() - start_time
   opt[["number_of_coefficients"]] = c("Total"=length(unlist(obj$env$parameters)), "Fixed"=length(obj$par), "Random"=length(unlist(obj$env$parameters))-length(obj$par) )
-  opt[["AIC"]] = 2*opt$objective + 2*length(opt$par)
+  opt[["AIC"]] = TMBhelper::TMBAIC( opt=opt )
+  if( n!=Inf ){
+    opt[["AICc"]] = TMBhelper::TMBAIC( opt=opt, n=n )
+    opt[["BIC"]] = TMBhelper::TMBAIC( opt=opt, p=log(n) )
+  }
   opt[["diagnostics"]] = data.frame( "Param"=names(obj$par), "starting_value"=startpar, "Lower"=lower, "MLE"=opt$par, "Upper"=upper, "final_gradient"=obj$gr(opt$par) )
 
   # Get standard deviations
