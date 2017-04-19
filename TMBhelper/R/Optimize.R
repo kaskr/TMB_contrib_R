@@ -49,7 +49,7 @@ Optimize = function( obj, startpar=obj$par, lower=rep(-Inf,length(startpar)), up
     opt[["AICc"]] = TMBhelper::TMBAIC( opt=opt, n=n )
     opt[["BIC"]] = TMBhelper::TMBAIC( opt=opt, p=log(n) )
   }
-  opt[["diagnostics"]] = data.frame( "Param"=names(obj$par), "starting_value"=startpar, "Lower"=lower, "MLE"=opt$par, "Upper"=upper, "final_gradient"=obj$gr(opt$par) )
+  opt[["diagnostics"]] = data.frame( "Param"=names(obj$par), "starting_value"=startpar, "Lower"=lower, "MLE"=opt$par, "Upper"=upper, "final_gradient"=as.vector(obj$gr(opt$par)) )
 
   # Get standard deviations
   if(getsd==TRUE) opt[["SD"]] = sdreport( obj, opt$par, ... )
