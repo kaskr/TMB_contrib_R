@@ -9,6 +9,7 @@
 #' @param  data A list to be passed to TMB
 #' @param  parameters A list of parameters of the model
 #' @param  random A character vector of names of parameters that are random effects
+#' @param  phases A list of the phases for the parameters of the model (same structure as your parameter list)
 #' @param  model_name A string describing the model name. Must be the name of your .cpp file
 #' @param  optimizer The optimizer to use. Default is nlminb (This is not currently active) 
 #' @return A list of parameter estimates and their standard errors
@@ -40,19 +41,9 @@
 #'  )
 #'  TMBphase(data, parameters, random, model_name, optimizer = "nlminb")
 
-TMBphase <- function(data, parameters, random, model_name,
+TMBphase <- function(data, parameters, random, phases, model_name,
                      optimizer = "nlminb") {
 
-#      parameters$logQ <- -3
-#      phases <- list(
-#        X=2,
-#        logr0=1,
-#        logtheta=1,
-#        logK=1,
-#        logQ=2,
-#        logR=1
-#      )
-  
   # function to fill list component with a factor
   fill_vals <- function(x,vals){rep(as.factor(vals), length(x))}
 
