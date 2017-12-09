@@ -21,7 +21,8 @@
 #' TMBhelper::Optimize( Obj ) # where Obj is a compiled TMB object
 
 #' @export
-Optimize = function( obj, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)), getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=TRUE),
+Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)),
+  getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=TRUE),
   savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, ... ){
 
   # Run first time
@@ -52,7 +53,14 @@ Optimize = function( obj, startpar=obj$par, lower=rep(-Inf,length(startpar)), up
   opt[["diagnostics"]] = data.frame( "Param"=names(obj$par), "starting_value"=startpar, "Lower"=lower, "MLE"=opt$par, "Upper"=upper, "final_gradient"=as.vector(obj$gr(opt$par)) )
 
   # Get standard deviations
-  if(getsd==TRUE) opt[["SD"]] = sdreport( obj, opt$par, ... )
+  if(getsd==TRUE){
+    h <- optimHess(opt$par, obj$fn, obj$gr)
+    if( is.character(try(chol(h),silent=TRUE)) ){
+      warning("Hessian is not positive definite, so standard errors are not available")
+      return( list("opt"=opt, "h"=h) )
+    }
+    opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, ... )
+  }
 
   # Save results
   if( !is.null(savedir) ){
