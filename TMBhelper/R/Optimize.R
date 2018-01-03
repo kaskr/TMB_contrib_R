@@ -22,7 +22,7 @@
 
 #' @export
 Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)),
-  getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=TRUE),
+  getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=0),
   savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, ... ){
 
   # Run first time
@@ -44,6 +44,7 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
 
   # Add diagnostics
   opt[["run_time"]] = Sys.time() - start_time
+  opt[["max_gradient"]] = max(abs(obj$gr(opt$par)))
   opt[["number_of_coefficients"]] = c("Total"=length(unlist(obj$env$parameters)), "Fixed"=length(obj$par), "Random"=length(unlist(obj$env$parameters))-length(obj$par) )
   opt[["AIC"]] = TMBhelper::TMBAIC( opt=opt )
   if( n!=Inf ){
