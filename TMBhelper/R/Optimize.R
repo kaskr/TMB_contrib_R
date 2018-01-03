@@ -22,7 +22,7 @@
 
 #' @export
 Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)),
-  getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=TRUE),
+  getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=0),
   savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, ... ){
 
   # Run first time
