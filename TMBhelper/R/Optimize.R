@@ -22,7 +22,8 @@
 
 #' @export
 Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)),
-  getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=0),
+  getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=0), bias.correct=FALSE,
+  bias.correct.control=list(sd=FALSE, split=NULL, nsplit=1, vars_to_correct=NULL),
   savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, ... ){
 
   # Run first time
@@ -55,12 +56,26 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
 
   # Get standard deviations
   if(getsd==TRUE){
+    # Compute hessian
     h <- optimHess(opt$par, obj$fn, obj$gr)
+    # Check for problems
     if( is.character(try(chol(h),silent=TRUE)) ){
       warning("Hessian is not positive definite, so standard errors are not available")
       return( list("opt"=opt, "h"=h) )
     }
-    opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, ... )
+    # Compute standard errors
+    if( bias.correct==FALSE | is.null(bias.correct.control[["vars_to_correct"]]) ){
+      opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=bias.correct, bias.correct.control=bias.correct.control[c("sd","split","nsplit")], ... )
+    }else{
+      # Run first time to get indices
+      opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=FALSE )
+      # Determine indices
+      Which = which( rownames(summary(opt[["SD"]],"report")) %in% bias.correct.control[["vars_to_correct"]] )
+      Which = split( Which, cut(seq_along(Which), bias.correct.control[["nsplit"]]) )
+      Which = Which[sapply(Which,FUN=length)>0]
+      # Repeat SD with indexing
+      opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=TRUE, bias.correct.control=list(sd=bias.correct.control[["sd"]], split=Which, nsplit=NULL) )
+    }
   }
 
   # Save results
