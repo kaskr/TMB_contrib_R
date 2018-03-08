@@ -71,8 +71,9 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
       opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=FALSE )
       # Determine indices
       Which = which( rownames(summary(opt[["SD"]],"report")) %in% bias.correct.control[["vars_to_correct"]] )
-      Which = split( Which, cut(seq_along(Which), bias.correct.control[["nsplit"]]) )
+      if(bias.correct.control[["nsplit"]]>1) Which = split( Which, cut(seq_along(Which), bias.correct.control[["nsplit"]]) )
       Which = Which[sapply(Which,FUN=length)>0]
+      if(length(Which)==0) Which = NULL
       # Repeat SD with indexing
       opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=TRUE, bias.correct.control=list(sd=bias.correct.control[["sd"]], split=Which, nsplit=NULL) )
     }
