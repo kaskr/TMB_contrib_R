@@ -67,15 +67,21 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
     if( bias.correct==FALSE | is.null(bias.correct.control[["vars_to_correct"]]) ){
       opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=bias.correct, bias.correct.control=bias.correct.control[c("sd","split","nsplit")], ... )
     }else{
-      # Run first time to get indices
-      opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=FALSE )
-      # Determine indices
-      Which = which( rownames(summary(opt[["SD"]],"report")) %in% bias.correct.control[["vars_to_correct"]] )
+      if( "ADreportIndex" %in% names(obj$env) ){
+        Which = as.vector(unlist( Obj$env$ADreportIndex()[ bias.correct.control[["vars_to_correct"]] ] ))
+      }else{
+        # Run first time to get indices
+        opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=FALSE, ... )
+        # Determine indices
+        Which = which( rownames(summary(opt[["SD"]],"report")) %in% bias.correct.control[["vars_to_correct"]] )
+      }
+      # Split up indices
       if(bias.correct.control[["nsplit"]]>1) Which = split( Which, cut(seq_along(Which), bias.correct.control[["nsplit"]]) )
       Which = Which[sapply(Which,FUN=length)>0]
       if(length(Which)==0) Which = NULL
       # Repeat SD with indexing
-      opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=TRUE, bias.correct.control=list(sd=bias.correct.control[["sd"]], split=Which, nsplit=NULL) )
+      message( paste0("Bias correcting ", length(Which), " derived quantities") )
+      opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=TRUE, bias.correct.control=list(sd=bias.correct.control[["sd"]], split=Which, nsplit=NULL), ... )
     }
   }
 
