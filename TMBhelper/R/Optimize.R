@@ -9,6 +9,8 @@
 #' @param upper upper bounds on fixed effects
 #' @param getsd Boolean whether to run standard error calculation
 #' @param control list of options to pass to \code{nlminb}
+#' @param bias.correct Boolean whether to do epsilon bias-correction
+#' @param bias.correct.control tagged list of options for epsilon bias-correction, where \code{vars_to_correct} is a character-vector of ADREPORT variables that should be bias-corrected
 #' @param savedir directory to save results (if \code{savedir=NULL}, then results aren't saved)
 #' @param loopnum number of times to re-start optimization (where \code{loopnum=3} sometimes achieves a lower final gradient than \code{loopnum=1})
 #' @param newtonsteps number of extra newton steps to take after optimization (alternative to \code{loopnum})
