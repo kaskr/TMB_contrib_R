@@ -20,7 +20,7 @@ Check_Identifiable = function( obj ){
 
   # Check for parameters
   RowMax = apply( List[["Eigen"]]$vectors[,List[["WhichBad"]]], MARGIN=1, FUN=function(vec){max(abs(vec))} )
-  List[["BadParams"]] = data.frame("Param"=names(obj$par), "MLE"=ParHat, ifelse(RowMax>0.1, "Bad","OK"))
+  List[["BadParams"]] = data.frame("Param"=names(obj$par), "MLE"=ParHat, "Param_check"=ifelse(RowMax>0.1, "Bad","OK"))
 
   # Message
   if( length(List[["WhichBad"]])==0 ){

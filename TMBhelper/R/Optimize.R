@@ -34,7 +34,10 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
 
   # Re-run to further decrease final gradient
   for( i in seq(2,loopnum,length=max(0,loopnum-1)) ){
+    Temp = opt[c('iterations','evaluations')]
     opt = nlminb( start=opt$par, objective=obj$fn, gradient=obj$gr, control=control, lower=lower, upper=upper )
+    opt[['iterations']] = opt[['iterations']] + Temp[['iterations']]
+    opt[['evaluations']] = opt[['evaluations']] + Temp[['evaluations']]
   }
 
   ## Run some Newton steps
@@ -45,9 +48,13 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
     opt$objective <- obj$fn(opt$par)
   }
 
+  # Exclude meaningless messages
+  opt = opt[c('par','objective','iterations','evaluations')]
+
   # Add diagnostics
   opt[["run_time"]] = Sys.time() - start_time
   opt[["max_gradient"]] = max(abs(obj$gr(opt$par)))
+  opt[["Convergence_check"]] = ifelse( opt[["max_gradient"]]<0.0001, "There is no evidence that the model is not converged", "The model is likely not converged" )
   opt[["number_of_coefficients"]] = c("Total"=length(unlist(obj$env$parameters)), "Fixed"=length(obj$par), "Random"=length(unlist(obj$env$parameters))-length(obj$par) )
   opt[["AIC"]] = TMBhelper::TMBAIC( opt=opt )
   if( n!=Inf ){
@@ -85,6 +92,8 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
       message( paste0("Bias correcting ", length(Which), " derived quantities") )
       opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=TRUE, bias.correct.control=list(sd=bias.correct.control[["sd"]], split=Which, nsplit=NULL), ... )
     }
+    # Update
+    opt[["Convergence_check"]] = ifelse( opt$SD$pdHess==TRUE, opt[["Convergence_check"]], "The model is definitely not converged" )
   }
 
   # Save results
@@ -93,6 +102,13 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
     #parameter_estimates$SD = parameter_estimates$SD[ setdiff(names(parameter_estimates$SD),"env") ]
     save( parameter_estimates, file=file.path(savedir,"parameter_estimates.RData"))
     capture.output( parameter_estimates, file=file.path(savedir,"parameter_estimates.txt"))
+  }
+
+  # Print warning to screen
+  if( opt[["Convergence_check"]] != "There is no evidence that the model is not converged" ){
+    message( "#########################" )
+    message( opt[["Convergence_check"]] )
+    message( "#########################" )
   }
 
   # Return stuff
