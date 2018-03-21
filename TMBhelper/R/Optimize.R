@@ -25,7 +25,7 @@
 #' @export
 Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)),
   getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=0), bias.correct=FALSE,
-  bias.correct.control=list(sd=FALSE, split=NULL, nsplit=1, vars_to_correct=NULL),
+  bias.correct.control=list(sd=FALSE, split=NULL, nsplit=NULL, vars_to_correct=NULL),
   savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, ... ){
 
   # Run first time
@@ -74,6 +74,7 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
     }
     # Compute standard errors
     if( bias.correct==FALSE | is.null(bias.correct.control[["vars_to_correct"]]) ){
+      if( bias.correct.control[["nsplit"]] == 1 ) bias.correct.control[["nsplit"]] = NULL
       opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=bias.correct, bias.correct.control=bias.correct.control[c("sd","split","nsplit")], ... )
     }else{
       if( "ADreportIndex" %in% names(obj$env) ){
@@ -85,7 +86,10 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
         Which = which( rownames(summary(opt[["SD"]],"report")) %in% bias.correct.control[["vars_to_correct"]] )
       }
       # Split up indices
-      if(bias.correct.control[["nsplit"]]>1) Which = split( Which, cut(seq_along(Which), bias.correct.control[["nsplit"]]) )
+      message("Test1")
+      if( !is.null(bias.correct.control[["nsplit"]]) && bias.correct.control[["nsplit"]]>1 ){
+        Which = split( Which, cut(seq_along(Which), bias.correct.control[["nsplit"]]) )
+      }
       Which = Which[sapply(Which,FUN=length)>0]
       if(length(Which)==0) Which = NULL
       # Repeat SD with indexing
