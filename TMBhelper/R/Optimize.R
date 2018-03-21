@@ -74,7 +74,10 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
     }
     # Compute standard errors
     if( bias.correct==FALSE | is.null(bias.correct.control[["vars_to_correct"]]) ){
-      if( bias.correct.control[["nsplit"]] == 1 ) bias.correct.control[["nsplit"]] = NULL
+      if( !is.null(bias.correct.control[["nsplit"]]) ) {
+        if( bias.correct.control[["nsplit"]] == 1 ) bias.correct.control[["nsplit"]] = NULL
+      }
+      # if( bias.correct.control[["nsplit"]] == 1 ) bias.correct.control[["nsplit"]] = NULL
       opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=bias.correct, bias.correct.control=bias.correct.control[c("sd","split","nsplit")], ... )
     }else{
       if( "ADreportIndex" %in% names(obj$env) ){
