@@ -28,6 +28,16 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
   bias.correct.control=list(sd=FALSE, split=NULL, nsplit=NULL, vars_to_correct=NULL),
   savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, ... ){
 
+  # Specify default values for bias.correct.control, which is internally called `BS.control`
+  BS.control = list(sd=FALSE, split=NULL, nsplit=NULL, vars_to_correct=NULL)
+
+  # Replace defaults for `BS.control` with provided values (if any)
+  for( i in 1:length(bias.correct.control)){
+    if(tolower(names(bias.correct.control)[i]) %in% tolower(names(BS.control))){
+      BS.control[[match(tolower(names(bias.correct.control)[i]),tolower(names(BS.control)))]] = bias.correct.control[[i]]
+    }
+  }
+
   # Run first time
   start_time = Sys.time()
   opt = nlminb( start=startpar, objective=obj$fn, gradient=obj$gr, control=control, lower=lower, upper=upper )
@@ -73,31 +83,29 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
       return( list("opt"=opt, "h"=h) )
     }
     # Compute standard errors
-    if( bias.correct==FALSE | is.null(bias.correct.control[["vars_to_correct"]]) ){
-      if( !is.null(bias.correct.control[["nsplit"]]) ) {
-        if( bias.correct.control[["nsplit"]] == 1 ) bias.correct.control[["nsplit"]] = NULL
+    if( bias.correct==FALSE | is.null(BS.control[["vars_to_correct"]]) ){
+      if( !is.null(BS.control[["nsplit"]]) ) {
+        if( BS.control[["nsplit"]] == 1 ) BS.control[["nsplit"]] = NULL
       }
-      # if( bias.correct.control[["nsplit"]] == 1 ) bias.correct.control[["nsplit"]] = NULL
-      opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=bias.correct, bias.correct.control=bias.correct.control[c("sd","split","nsplit")], ... )
+      opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=bias.correct, bias.correct.control=BS.control[c("sd","split","nsplit")], ... )
     }else{
       if( "ADreportIndex" %in% names(obj$env) ){
-        Which = as.vector(unlist( Obj$env$ADreportIndex()[ bias.correct.control[["vars_to_correct"]] ] ))
+        Which = as.vector(unlist( Obj$env$ADreportIndex()[ BS.control[["vars_to_correct"]] ] ))
       }else{
         # Run first time to get indices
         opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=FALSE, ... )
         # Determine indices
-        Which = which( rownames(summary(opt[["SD"]],"report")) %in% bias.correct.control[["vars_to_correct"]] )
+        Which = which( rownames(summary(opt[["SD"]],"report")) %in% BS.control[["vars_to_correct"]] )
       }
       # Split up indices
-      message("Test1")
-      if( !is.null(bias.correct.control[["nsplit"]]) && bias.correct.control[["nsplit"]]>1 ){
-        Which = split( Which, cut(seq_along(Which), bias.correct.control[["nsplit"]]) )
+      if( !is.null(BS.control[["nsplit"]]) && BS.control[["nsplit"]]>1 ){
+        Which = split( Which, cut(seq_along(Which), BS.control[["nsplit"]]) )
       }
       Which = Which[sapply(Which,FUN=length)>0]
       if(length(Which)==0) Which = NULL
       # Repeat SD with indexing
       message( paste0("Bias correcting ", length(Which), " derived quantities") )
-      opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=TRUE, bias.correct.control=list(sd=bias.correct.control[["sd"]], split=Which, nsplit=NULL), ... )
+      opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=TRUE, bias.correct.control=list(sd=BS.control[["sd"]], split=Which, nsplit=NULL), ... )
     }
     # Update
     opt[["Convergence_check"]] = ifelse( opt$SD$pdHess==TRUE, opt[["Convergence_check"]], "The model is definitely not converged" )
