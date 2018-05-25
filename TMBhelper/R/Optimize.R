@@ -40,43 +40,43 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
 
   # Run first time
   start_time = Sys.time()
-  opt = nlminb( start=startpar, objective=obj$fn, gradient=obj$gr, control=control, lower=lower, upper=upper )
+  opt = nlminb( start=startpar, objective=fn, gradient=gr, control=control, lower=lower, upper=upper )
 
   # Re-run to further decrease final gradient
   for( i in seq(2,loopnum,length=max(0,loopnum-1)) ){
     Temp = opt[c('iterations','evaluations')]
-    opt = nlminb( start=opt$par, objective=obj$fn, gradient=obj$gr, control=control, lower=lower, upper=upper )
+    opt = nlminb( start=opt$par, objective=fn, gradient=gr, control=control, lower=lower, upper=upper )
     opt[['iterations']] = opt[['iterations']] + Temp[['iterations']]
     opt[['evaluations']] = opt[['evaluations']] + Temp[['evaluations']]
   }
 
   ## Run some Newton steps
   for(i in seq_len(newtonsteps)) {
-    g <- as.numeric( obj$gr(opt$par) )
-    h <- optimHess(opt$par, obj$fn, obj$gr)
+    g <- as.numeric( gr(opt$par) )
+    h <- optimHess(opt$par, fn=fn, gr=gr)
     opt$par <- opt$par - solve(h, g)
-    opt$objective <- obj$fn(opt$par)
+    opt$objective <- fn(opt$par)
   }
 
-  # Exclude meaningless messages
+  # Exclude difficult-to-interpret messages
   opt = opt[c('par','objective','iterations','evaluations')]
 
   # Add diagnostics
   opt[["run_time"]] = Sys.time() - start_time
-  opt[["max_gradient"]] = max(abs(obj$gr(opt$par)))
+  opt[["max_gradient"]] = max(abs(gr(opt$par)))
   opt[["Convergence_check"]] = ifelse( opt[["max_gradient"]]<0.0001, "There is no evidence that the model is not converged", "The model is likely not converged" )
-  opt[["number_of_coefficients"]] = c("Total"=length(unlist(obj$env$parameters)), "Fixed"=length(obj$par), "Random"=length(unlist(obj$env$parameters))-length(obj$par) )
+  opt[["number_of_coefficients"]] = c("Total"=length(unlist(obj$env$parameters)), "Fixed"=length(startpar), "Random"=length(unlist(obj$env$parameters))-length(startpar) )
   opt[["AIC"]] = TMBhelper::TMBAIC( opt=opt )
   if( n!=Inf ){
     opt[["AICc"]] = TMBhelper::TMBAIC( opt=opt, n=n )
     opt[["BIC"]] = TMBhelper::TMBAIC( opt=opt, p=log(n) )
   }
-  opt[["diagnostics"]] = data.frame( "Param"=names(obj$par), "starting_value"=startpar, "Lower"=lower, "MLE"=opt$par, "Upper"=upper, "final_gradient"=as.vector(obj$gr(opt$par)) )
+  opt[["diagnostics"]] = data.frame( "Param"=names(startpar), "starting_value"=startpar, "Lower"=lower, "MLE"=opt$par, "Upper"=upper, "final_gradient"=as.vector(gr(opt$par)) )
 
   # Get standard deviations
   if(getsd==TRUE){
     # Compute hessian
-    h <- optimHess(opt$par, obj$fn, obj$gr)
+    h <- optimHess(opt$par, fn=fn, gr=gr)
     # Check for problems
     if( is.character(try(chol(h),silent=TRUE)) ){
       warning("Hessian is not positive definite, so standard errors are not available")
@@ -90,7 +90,7 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
       opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=bias.correct, bias.correct.control=BS.control[c("sd","split","nsplit")], ... )
     }else{
       if( "ADreportIndex" %in% names(obj$env) ){
-        Which = as.vector(unlist( Obj$env$ADreportIndex()[ BS.control[["vars_to_correct"]] ] ))
+        Which = as.vector(unlist( obj$env$ADreportIndex()[ BS.control[["vars_to_correct"]] ] ))
       }else{
         # Run first time to get indices
         opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=FALSE, ... )
