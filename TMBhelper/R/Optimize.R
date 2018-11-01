@@ -40,62 +40,65 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
 
   # Run first time
   start_time = Sys.time()
-  opt = nlminb( start=startpar, objective=fn, gradient=gr, control=control, lower=lower, upper=upper )
+  parameter_estimates = nlminb( start=startpar, objective=fn, gradient=gr, control=control, lower=lower, upper=upper )
 
   # Re-run to further decrease final gradient
   for( i in seq(2,loopnum,length=max(0,loopnum-1)) ){
-    Temp = opt[c('iterations','evaluations')]
-    opt = nlminb( start=opt$par, objective=fn, gradient=gr, control=control, lower=lower, upper=upper )
-    opt[['iterations']] = opt[['iterations']] + Temp[['iterations']]
-    opt[['evaluations']] = opt[['evaluations']] + Temp[['evaluations']]
+    Temp = parameter_estimates[c('iterations','evaluations')]
+    parameter_estimates = nlminb( start=parameter_estimates$par, objective=fn, gradient=gr, control=control, lower=lower, upper=upper )
+    parameter_estimates[['iterations']] = parameter_estimates[['iterations']] + Temp[['iterations']]
+    parameter_estimates[['evaluations']] = parameter_estimates[['evaluations']] + Temp[['evaluations']]
   }
 
   ## Run some Newton steps
   for(i in seq_len(newtonsteps)) {
-    g <- as.numeric( gr(opt$par) )
-    h <- optimHess(opt$par, fn=fn, gr=gr)
-    opt$par <- opt$par - solve(h, g)
-    opt$objective <- fn(opt$par)
+    g <- as.numeric( gr(parameter_estimates$par) )
+    h <- optimHess(parameter_estimates$par, fn=fn, gr=gr)
+    parameter_estimates$par <- parameter_estimates$par - solve(h, g)
+    parameter_estimates$objective <- fn(parameter_estimates$par)
   }
 
   # Exclude difficult-to-interpret messages
-  opt = opt[c('par','objective','iterations','evaluations')]
+  parameter_estimates = parameter_estimates[c('par','objective','iterations','evaluations')]
 
   # Add diagnostics
-  opt[["run_time"]] = Sys.time() - start_time
-  opt[["max_gradient"]] = max(abs(gr(opt$par)))
-  opt[["Convergence_check"]] = ifelse( opt[["max_gradient"]]<0.0001, "There is no evidence that the model is not converged", "The model is likely not converged" )
-  opt[["number_of_coefficients"]] = c("Total"=length(unlist(obj$env$parameters)), "Fixed"=length(startpar), "Random"=length(unlist(obj$env$parameters))-length(startpar) )
-  opt[["AIC"]] = TMBhelper::TMBAIC( opt=opt )
+  parameter_estimates[["run_time"]] = Sys.time() - start_time
+  parameter_estimates[["max_gradient"]] = max(abs(gr(parameter_estimates$par)))
+  parameter_estimates[["Convergence_check"]] = ifelse( parameter_estimates[["max_gradient"]]<0.0001, "There is no evidence that the model is not converged", "The model is likely not converged" )
+  parameter_estimates[["number_of_coefficients"]] = c("Total"=length(unlist(obj$env$parameters)), "Fixed"=length(startpar), "Random"=length(unlist(obj$env$parameters))-length(startpar) )
+  parameter_estimates[["AIC"]] = TMBhelper::TMBAIC( opt=parameter_estimates )
   if( n!=Inf ){
-    opt[["AICc"]] = TMBhelper::TMBAIC( opt=opt, n=n )
-    opt[["BIC"]] = TMBhelper::TMBAIC( opt=opt, p=log(n) )
+    parameter_estimates[["AICc"]] = TMBhelper::TMBAIC( opt=parameter_estimates, n=n )
+    parameter_estimates[["BIC"]] = TMBhelper::TMBAIC( opt=parameter_estimates, p=log(n) )
   }
-  opt[["diagnostics"]] = data.frame( "Param"=names(startpar), "starting_value"=startpar, "Lower"=lower, "MLE"=opt$par, "Upper"=upper, "final_gradient"=as.vector(gr(opt$par)) )
+  parameter_estimates[["diagnostics"]] = data.frame( "Param"=names(startpar), "starting_value"=startpar, "Lower"=lower, "MLE"=parameter_estimates$par, "Upper"=upper, "final_gradient"=as.vector(gr(parameter_estimates$par)) )
 
   # Get standard deviations
   if(getsd==TRUE){
     # Compute hessian
-    h <- optimHess(opt$par, fn=fn, gr=gr)
+    h <- optimHess(parameter_estimates$par, fn=fn, gr=gr)
     # Check for problems
     if( is.character(try(chol(h),silent=TRUE)) ){
       warning("Hessian is not positive definite, so standard errors are not available")
-      return( list("opt"=opt, "h"=h) )
+      if( !is.null(savedir) ){
+        capture.output( parameter_estimates, file=file.path(savedir,"parameter_estimates.txt"))
+      }
+      return( list("opt"=parameter_estimates, "h"=h) )
     }
     # Compute standard errors
     if( bias.correct==FALSE | is.null(BS.control[["vars_to_correct"]]) ){
       if( !is.null(BS.control[["nsplit"]]) ) {
         if( BS.control[["nsplit"]] == 1 ) BS.control[["nsplit"]] = NULL
       }
-      opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=bias.correct, bias.correct.control=BS.control[c("sd","split","nsplit")], ... )
+      parameter_estimates[["SD"]] = sdreport( obj=obj, par.fixed=parameter_estimates$par, hessian.fixed=h, bias.correct=bias.correct, bias.correct.control=BS.control[c("sd","split","nsplit")], ... )
     }else{
       if( "ADreportIndex" %in% names(obj$env) ){
         Which = as.vector(unlist( obj$env$ADreportIndex()[ BS.control[["vars_to_correct"]] ] ))
       }else{
         # Run first time to get indices
-        opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=FALSE, ... )
+        parameter_estimates[["SD"]] = sdreport( obj=obj, par.fixed=parameter_estimates$par, hessian.fixed=h, bias.correct=FALSE, ... )
         # Determine indices
-        Which = which( rownames(summary(opt[["SD"]],"report")) %in% BS.control[["vars_to_correct"]] )
+        Which = which( rownames(summary(parameter_estimates[["SD"]],"report")) %in% BS.control[["vars_to_correct"]] )
       }
       # Split up indices
       if( !is.null(BS.control[["nsplit"]]) && BS.control[["nsplit"]]>1 ){
@@ -105,28 +108,26 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
       if(length(Which)==0) Which = NULL
       # Repeat SD with indexing
       message( paste0("Bias correcting ", length(Which), " derived quantities") )
-      opt[["SD"]] = sdreport( obj=obj, par.fixed=opt$par, hessian.fixed=h, bias.correct=TRUE, bias.correct.control=list(sd=BS.control[["sd"]], split=Which, nsplit=NULL), ... )
+      parameter_estimates[["SD"]] = sdreport( obj=obj, par.fixed=parameter_estimates$par, hessian.fixed=h, bias.correct=TRUE, bias.correct.control=list(sd=BS.control[["sd"]], split=Which, nsplit=NULL), ... )
     }
     # Update
-    opt[["Convergence_check"]] = ifelse( opt$SD$pdHess==TRUE, opt[["Convergence_check"]], "The model is definitely not converged" )
+    parameter_estimates[["Convergence_check"]] = ifelse( parameter_estimates$SD$pdHess==TRUE, parameter_estimates[["Convergence_check"]], "The model is definitely not converged" )
   }
 
   # Save results
   if( !is.null(savedir) ){
-    parameter_estimates = opt
-    #parameter_estimates$SD = parameter_estimates$SD[ setdiff(names(parameter_estimates$SD),"env") ]
     save( parameter_estimates, file=file.path(savedir,"parameter_estimates.RData"))
     capture.output( parameter_estimates, file=file.path(savedir,"parameter_estimates.txt"))
   }
 
   # Print warning to screen
-  if( opt[["Convergence_check"]] != "There is no evidence that the model is not converged" ){
+  if( parameter_estimates[["Convergence_check"]] != "There is no evidence that the model is not converged" ){
     message( "#########################" )
     message( opt[["Convergence_check"]] )
     message( "#########################" )
   }
 
   # Return stuff
-  return( opt )
+  return( parameter_estimates )
 }
 
