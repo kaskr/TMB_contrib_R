@@ -123,7 +123,7 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
   # Print warning to screen
   if( parameter_estimates[["Convergence_check"]] != "There is no evidence that the model is not converged" ){
     message( "#########################" )
-    message( opt[["Convergence_check"]] )
+    message( parameter_estimates[["Convergence_check"]] )
     message( "#########################" )
   }
 
