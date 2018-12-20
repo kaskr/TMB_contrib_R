@@ -52,17 +52,17 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
 
   ## Run some Newton steps
   for(i in seq_len(newtonsteps)) {
-    g <- as.numeric( gr(parameter_estimates$par) )
-    h <- optimHess(parameter_estimates$par, fn=fn, gr=gr)
-    parameter_estimates$par <- parameter_estimates$par - solve(h, g)
-    parameter_estimates$objective <- fn(parameter_estimates$par)
+    g = as.numeric( gr(parameter_estimates$par) )
+    h = optimHess(parameter_estimates$par, fn=fn, gr=gr)
+    parameter_estimates$par = parameter_estimates$par - solve(h, g)
+    parameter_estimates$objective = fn(parameter_estimates$par)
   }
 
   # Exclude difficult-to-interpret messages
   parameter_estimates = parameter_estimates[c('par','objective','iterations','evaluations')]
 
   # Add diagnostics
-  parameter_estimates[["run_time"]] = Sys.time() - start_time
+  parameter_estimates[["time_for_MLE"]] = Sys.time() - start_time
   parameter_estimates[["max_gradient"]] = max(abs(gr(parameter_estimates$par)))
   parameter_estimates[["Convergence_check"]] = ifelse( parameter_estimates[["max_gradient"]]<0.0001, "There is no evidence that the model is not converged", "The model is likely not converged" )
   parameter_estimates[["number_of_coefficients"]] = c("Total"=length(unlist(obj$env$parameters)), "Fixed"=length(startpar), "Random"=length(unlist(obj$env$parameters))-length(startpar) )
@@ -76,7 +76,8 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
   # Get standard deviations
   if(getsd==TRUE){
     # Compute hessian
-    h <- optimHess(parameter_estimates$par, fn=fn, gr=gr)
+    sd_time = Sys.time()
+    h = optimHess(parameter_estimates$par, fn=fn, gr=gr)
     # Check for problems
     if( is.character(try(chol(h),silent=TRUE)) ){
       warning("Hessian is not positive definite, so standard errors are not available")
@@ -112,7 +113,9 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
     }
     # Update
     parameter_estimates[["Convergence_check"]] = ifelse( parameter_estimates$SD$pdHess==TRUE, parameter_estimates[["Convergence_check"]], "The model is definitely not converged" )
+    parameter_estimates[["time_for_sdreport"]] = Sys.time() - sd_time
   }
+  parameter_estimates[["time_for_run"]] = Sys.time() - start_time
 
   # Save results
   if( !is.null(savedir) ){
