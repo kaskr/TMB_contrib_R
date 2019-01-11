@@ -18,14 +18,15 @@ Check_Identifiable = function( obj ){
   List[["Eigen"]] = eigen( List[["Hess"]] )
   List[["WhichBad"]] = which( List[["Eigen"]]$values < sqrt(.Machine$double.eps) )
 
-  # Check for parameters
-  RowMax = apply( List[["Eigen"]]$vectors[,List[["WhichBad"]]], MARGIN=1, FUN=function(vec){max(abs(vec))} )
-  List[["BadParams"]] = data.frame("Param"=names(obj$par), "MLE"=ParHat, "Param_check"=ifelse(RowMax>0.1, "Bad","OK"))
-
-  # Message
+  # Check result
   if( length(List[["WhichBad"]])==0 ){
+    # print message
     message( "All parameters are identifiable" )
   }else{
+    # Check for parameters
+    RowMax = apply( List[["Eigen"]]$vectors[,List[["WhichBad"]],drop=FALSE], MARGIN=1, FUN=function(vec){max(abs(vec))} )
+    List[["BadParams"]] = data.frame("Param"=names(obj$par), "MLE"=ParHat, "Param_check"=ifelse(RowMax>0.1, "Bad","OK"))
+    # print message
     print( List[["BadParams"]] )
   }
 
