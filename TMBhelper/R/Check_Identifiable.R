@@ -9,8 +9,15 @@
 
 #' @export
 Check_Identifiable = function( obj ){
-  # Finite-different hessian
+
+  # Extract fixed effects
   ParHat = TMBhelper:::extract_fixed( obj )
+
+  # Check for problems
+  Gr = obj$gr( ParHat )
+  if( any(Gr>0.01) ) stop("Some gradients are high, please improve optimization and only then use `Check_Identifiable`")
+
+  # Finite-different hessian
   List = NULL
   List[["Hess"]] = optimHess( par=ParHat, fn=obj$fn, gr=obj$gr )
 
