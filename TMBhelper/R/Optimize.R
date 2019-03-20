@@ -5,10 +5,9 @@
 #'
 #' @param obj The compiled TMB object
 #' @param startpar Starting values for fixed effects
-#' @param lower lower bounds on fixed effects
-#' @param upper upper bounds on fixed effects
+#' @inheritParams stats::nlminb
+#' @param control A list of control parameters. For details see \code{?nlminb}
 #' @param getsd Boolean whether to run standard error calculation
-#' @param control list of options to pass to \code{nlminb}
 #' @param bias.correct Boolean whether to do epsilon bias-correction
 #' @param bias.correct.control tagged list of options for epsilon bias-correction, where \code{vars_to_correct} is a character-vector of ADREPORT variables that should be bias-corrected
 #' @param savedir directory to save results (if \code{savedir=NULL}, then results aren't saved)

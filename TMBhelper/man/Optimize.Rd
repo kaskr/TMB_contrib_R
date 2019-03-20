@@ -5,10 +5,11 @@
 \title{Optimize a TMB model}
 \usage{
 Optimize(obj, fn = obj$fn, gr = obj$gr, startpar = obj$par,
-  lower = rep(-Inf, length(startpar)), upper = rep(Inf, length(startpar)),
-  getsd = TRUE, control = list(eval.max = 10000, iter.max = 10000, trace =
-  0), bias.correct = FALSE, bias.correct.control = list(sd = FALSE, split =
-  NULL, nsplit = 1, vars_to_correct = NULL), savedir = NULL, loopnum = 3,
+  lower = rep(-Inf, length(startpar)), upper = rep(Inf,
+  length(startpar)), getsd = TRUE, control = list(eval.max = 10000,
+  iter.max = 10000, trace = 0), bias.correct = FALSE,
+  bias.correct.control = list(sd = FALSE, split = NULL, nsplit = NULL,
+  vars_to_correct = NULL), savedir = NULL, loopnum = 3,
   newtonsteps = 0, n = Inf, ...)
 }
 \arguments{
@@ -16,13 +17,21 @@ Optimize(obj, fn = obj$fn, gr = obj$gr, startpar = obj$par,
 
 \item{startpar}{Starting values for fixed effects}
 
-\item{lower}{lower bounds on fixed effects}
+\item{lower}{
+    vectors of lower and upper bounds, replicated to be as long as
+    \code{start}.  If unspecified, all parameters are assumed to be
+    unconstrained.
+  }
 
-\item{upper}{upper bounds on fixed effects}
+\item{upper}{
+    vectors of lower and upper bounds, replicated to be as long as
+    \code{start}.  If unspecified, all parameters are assumed to be
+    unconstrained.
+  }
 
 \item{getsd}{Boolean whether to run standard error calculation}
 
-\item{control}{list of options to pass to \code{nlminb}}
+\item{control}{A list of control parameters. For details see \code{?nlminb}}
 
 \item{bias.correct}{Boolean whether to do epsilon bias-correction}
 
@@ -47,4 +56,3 @@ the standard output from \code{nlminb}, except with additional diagnostics and t
 \examples{
 TMBhelper::Optimize( Obj ) # where Obj is a compiled TMB object
 }
-
