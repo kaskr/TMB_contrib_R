@@ -10,7 +10,7 @@ Optimize(obj, fn = obj$fn, gr = obj$gr, startpar = obj$par,
   iter.max = 10000, trace = 0), bias.correct = FALSE,
   bias.correct.control = list(sd = FALSE, split = NULL, nsplit = NULL,
   vars_to_correct = NULL), savedir = NULL, loopnum = 3,
-  newtonsteps = 0, n = Inf, ...)
+  newtonsteps = 0, n = Inf, getReportCovariance = FALSE, ...)
 }
 \arguments{
 \item{obj}{The compiled TMB object}
@@ -45,7 +45,9 @@ Optimize(obj, fn = obj$fn, gr = obj$gr, startpar = obj$par,
 
 \item{n}{sample sizes (if \code{n!=Inf} then \code{n} is used to calculate BIC and AICc)}
 
-\item{...}{list of settings to pass to \code{sdreport}}
+\item{getReportCovariance}{Get full covariance matrix of ADREPORTed variables?}
+
+\item{...}{list of settings to pass to \code{TMB::sdreport}}
 }
 \value{
 the standard output from \code{nlminb}, except with additional diagnostics and timing info, and a new slot containing the output from \code{sdreport}

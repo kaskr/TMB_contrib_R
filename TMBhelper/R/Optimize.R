@@ -6,6 +6,7 @@
 #' @param obj The compiled TMB object
 #' @param startpar Starting values for fixed effects
 #' @inheritParams stats::nlminb
+#' @inheritParams TMB::sdreport
 #' @param control A list of control parameters. For details see \code{?nlminb}
 #' @param getsd Boolean whether to run standard error calculation
 #' @param bias.correct Boolean whether to do epsilon bias-correction
@@ -14,7 +15,7 @@
 #' @param loopnum number of times to re-start optimization (where \code{loopnum=3} sometimes achieves a lower final gradient than \code{loopnum=1})
 #' @param newtonsteps number of extra newton steps to take after optimization (alternative to \code{loopnum})
 #' @param n sample sizes (if \code{n!=Inf} then \code{n} is used to calculate BIC and AICc)
-#' @param ... list of settings to pass to \code{sdreport}
+#' @param ... list of settings to pass to \code{TMB::sdreport}
 #'
 #' @return the standard output from \code{nlminb}, except with additional diagnostics and timing info, and a new slot containing the output from \code{sdreport}
 
@@ -25,7 +26,7 @@
 Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)),
   getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=0), bias.correct=FALSE,
   bias.correct.control=list(sd=FALSE, split=NULL, nsplit=NULL, vars_to_correct=NULL),
-  savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, ... ){
+  savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, getReportCovariance=FALSE, ... ){
 
   # Specify default values for bias.correct.control, which is internally called `BS.control`
   BS.control = list(sd=FALSE, split=NULL, nsplit=NULL, vars_to_correct=NULL)
@@ -90,13 +91,15 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
       if( !is.null(BS.control[["nsplit"]]) ) {
         if( BS.control[["nsplit"]] == 1 ) BS.control[["nsplit"]] = NULL
       }
-      parameter_estimates[["SD"]] = TMB::sdreport( obj=obj, par.fixed=parameter_estimates$par, hessian.fixed=h, bias.correct=bias.correct, bias.correct.control=BS.control[c("sd","split","nsplit")], ... )
+      parameter_estimates[["SD"]] = TMB::sdreport( obj=obj, par.fixed=parameter_estimates$par, hessian.fixed=h, bias.correct=bias.correct,
+        bias.correct.control=BS.control[c("sd","split","nsplit")], getReportCovariance=getReportCovariance, ... )
     }else{
       if( "ADreportIndex" %in% names(obj$env) ){
         Which = as.vector(unlist( obj$env$ADreportIndex()[ BS.control[["vars_to_correct"]] ] ))
       }else{
         # Run first time to get indices
-        parameter_estimates[["SD"]] = TMB::sdreport( obj=obj, par.fixed=parameter_estimates$par, hessian.fixed=h, bias.correct=FALSE, ... )
+        parameter_estimates[["SD"]] = TMB::sdreport( obj=obj, par.fixed=parameter_estimates$par, hessian.fixed=h, bias.correct=FALSE,
+           getReportCovariance=FALSE, ... )
         # Determine indices
         Which = which( rownames(summary(parameter_estimates[["SD"]],"report")) %in% BS.control[["vars_to_correct"]] )
       }
@@ -108,7 +111,8 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
       if(length(Which)==0) Which = NULL
       # Repeat SD with indexing
       message( paste0("Bias correcting ", length(Which), " derived quantities") )
-      parameter_estimates[["SD"]] = TMB::sdreport( obj=obj, par.fixed=parameter_estimates$par, hessian.fixed=h, bias.correct=TRUE, bias.correct.control=list(sd=BS.control[["sd"]], split=Which, nsplit=NULL), ... )
+      parameter_estimates[["SD"]] = TMB::sdreport( obj=obj, par.fixed=parameter_estimates$par, hessian.fixed=h, bias.correct=TRUE,
+        bias.correct.control=list(sd=BS.control[["sd"]], split=Which, nsplit=NULL), getReportCovariance=getReportCovariance, ... )
     }
     # Update
     parameter_estimates[["Convergence_check"]] = ifelse( parameter_estimates$SD$pdHess==TRUE, parameter_estimates[["Convergence_check"]], "The model is definitely not converged" )
