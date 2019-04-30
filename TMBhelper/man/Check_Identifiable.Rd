@@ -15,4 +15,3 @@ A tagged list of the hessian and the message
 \description{
 \code{Check_Identifiable} calculates the matrix of second-derivatives of the marginal likelihood w.r.t. fixed effects, to see if any linear combinations are unidentifiable
 }
-

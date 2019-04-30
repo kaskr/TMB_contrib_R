@@ -1,7 +1,7 @@
 
 #' Optimize a TMB model
 #'
-#' \code{Optimize} runs a TMB model and generates standard diagnostics
+#' \code{fit_tmb} runs a TMB model and generates standard diagnostics
 #'
 #' @param obj The compiled TMB object
 #' @param startpar Starting values for fixed effects
@@ -15,6 +15,7 @@
 #' @param loopnum number of times to re-start optimization (where \code{loopnum=3} sometimes achieves a lower final gradient than \code{loopnum=1})
 #' @param newtonsteps number of extra newton steps to take after optimization (alternative to \code{loopnum})
 #' @param n sample sizes (if \code{n!=Inf} then \code{n} is used to calculate BIC and AICc)
+#' @param getHessian return Hessian for usage in later code
 #' @param ... list of settings to pass to \code{TMB::sdreport}
 #'
 #' @return the standard output from \code{nlminb}, except with additional diagnostics and timing info, and a new slot containing the output from \code{sdreport}
@@ -23,29 +24,40 @@
 #' TMBhelper::Optimize( Obj ) # where Obj is a compiled TMB object
 
 #' @export
-Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)),
+fit_tmb = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)),
   getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=0), bias.correct=FALSE,
   bias.correct.control=list(sd=FALSE, split=NULL, nsplit=NULL, vars_to_correct=NULL),
-  savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, getReportCovariance=FALSE, ... ){
+  savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, getReportCovariance=FALSE, getHessian=FALSE, ... ){
 
-  # Specify default values for bias.correct.control, which is internally called `BS.control`
-  BS.control = list(sd=FALSE, split=NULL, nsplit=NULL, vars_to_correct=NULL)
+  # Local function -- combine two lists
+  combine_lists = function( default, input ){
+    output = default
+    for( i in seq_along(input) ){
+      if( names(input)[i] %in% names(default) ){
+        output[[names(input)[i]]] = input[[i]]
+      }else{
+        output = c( output, input[i] )
+      }
+    }
+    return( output )
+  }
 
   # Replace defaults for `BS.control` with provided values (if any)
-  for( i in 1:length(bias.correct.control)){
-    if(tolower(names(bias.correct.control)[i]) %in% tolower(names(BS.control))){
-      BS.control[[match(tolower(names(bias.correct.control)[i]),tolower(names(BS.control)))]] = bias.correct.control[[i]]
-    }
-  }
+  BS.control = list(sd=FALSE, split=NULL, nsplit=NULL, vars_to_correct=NULL)
+  BS.control = combine_lists( default=BS.control, input=bias.correct.control )
+
+  # Replace defaults for `control` with provided values if any
+  nlminb.control = list(eval.max=1e4, iter.max=1e4, trace=0)
+  nlminb.control = combine_lists( default=nlminb.control, input=control )
 
   # Run first time
   start_time = Sys.time()
-  parameter_estimates = nlminb( start=startpar, objective=fn, gradient=gr, control=control, lower=lower, upper=upper )
+  parameter_estimates = nlminb( start=startpar, objective=fn, gradient=gr, control=nlminb.control, lower=lower, upper=upper )
 
   # Re-run to further decrease final gradient
   for( i in seq(2,loopnum,length=max(0,loopnum-1)) ){
     Temp = parameter_estimates[c('iterations','evaluations')]
-    parameter_estimates = nlminb( start=parameter_estimates$par, objective=fn, gradient=gr, control=control, lower=lower, upper=upper )
+    parameter_estimates = nlminb( start=parameter_estimates$par, objective=fn, gradient=gr, control=nlminb.control, lower=lower, upper=upper )
     parameter_estimates[['iterations']] = parameter_estimates[['iterations']] + Temp[['iterations']]
     parameter_estimates[['evaluations']] = parameter_estimates[['evaluations']] + Temp[['evaluations']]
   }
@@ -117,6 +129,10 @@ Optimize = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf
     # Update
     parameter_estimates[["Convergence_check"]] = ifelse( parameter_estimates$SD$pdHess==TRUE, parameter_estimates[["Convergence_check"]], "The model is definitely not converged" )
     parameter_estimates[["time_for_sdreport"]] = Sys.time() - sd_time
+    # Add hessian to parameter_estimates
+    if( getHessian==TRUE ){
+      parameter_estimates[["hessian"]] = h
+    }
   }
   parameter_estimates[["time_for_run"]] = Sys.time() - start_time
 

@@ -15,4 +15,3 @@ A vector of fixed-effect estimates
 \description{
 \code{extract_fixed} extracts the best previous value of fixed effects, in a way that works for both mixed and fixed effect models
 }
-
