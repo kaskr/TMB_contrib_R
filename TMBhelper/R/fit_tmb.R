@@ -16,6 +16,7 @@
 #' @param newtonsteps number of extra newton steps to take after optimization (alternative to \code{loopnum})
 #' @param n sample sizes (if \code{n!=Inf} then \code{n} is used to calculate BIC and AICc)
 #' @param getHessian return Hessian for usage in later code
+#' @param quiet Boolean whether to print additional messages results to terminal
 #' @param ... list of settings to pass to \code{TMB::sdreport}
 #'
 #' @return the standard output from \code{nlminb}, except with additional diagnostics and timing info, and a new slot containing the output from \code{sdreport}
@@ -27,7 +28,8 @@
 fit_tmb = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)),
   getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=0), bias.correct=FALSE,
   bias.correct.control=list(sd=FALSE, split=NULL, nsplit=NULL, vars_to_correct=NULL),
-  savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, getReportCovariance=FALSE, getHessian=FALSE, ... ){
+  savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, getReportCovariance=FALSE, getHessian=FALSE,
+  quiet=FALSE, ... ){
 
   # Local function -- combine two lists
   combine_lists = function( default, input ){
@@ -143,7 +145,7 @@ fit_tmb = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf,
   }
 
   # Print warning to screen
-  if( parameter_estimates[["Convergence_check"]] != "There is no evidence that the model is not converged" ){
+  if( quiet==FALSE & parameter_estimates[["Convergence_check"]] != "There is no evidence that the model is not converged" ){
     message( "#########################" )
     message( parameter_estimates[["Convergence_check"]] )
     message( "#########################" )

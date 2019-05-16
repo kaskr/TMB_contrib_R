@@ -11,7 +11,7 @@ fit_tmb(obj, fn = obj$fn, gr = obj$gr, startpar = obj$par,
   bias.correct.control = list(sd = FALSE, split = NULL, nsplit = NULL,
   vars_to_correct = NULL), savedir = NULL, loopnum = 3,
   newtonsteps = 0, n = Inf, getReportCovariance = FALSE,
-  getHessian = FALSE, ...)
+  getHessian = FALSE, quiet = FALSE, ...)
 }
 \arguments{
 \item{obj}{The compiled TMB object}
@@ -49,6 +49,8 @@ fit_tmb(obj, fn = obj$fn, gr = obj$gr, startpar = obj$par,
 \item{getReportCovariance}{Get full covariance matrix of ADREPORTed variables?}
 
 \item{getHessian}{return Hessian for usage in later code}
+
+\item{quiet}{Boolean whether to print additional messages results to terminal}
 
 \item{...}{list of settings to pass to \code{TMB::sdreport}}
 }
