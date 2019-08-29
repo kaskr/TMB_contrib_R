@@ -19,7 +19,7 @@
 #' @param quiet Boolean whether to print additional messages results to terminal
 #' @param ... list of settings to pass to \code{TMB::sdreport}
 #'
-#' @return the standard output from \code{nlminb}, except with additional diagnostics and timing info, and a new slot containing the output from \code{sdreport}
+#' @return the standard output from \code{nlminb}, except with additional diagnostics and timing info, and a new slot containing the output from \code{TMB::sdreport}
 
 #' @examples
 #' TMBhelper::Optimize( Obj ) # where Obj is a compiled TMB object
@@ -28,8 +28,16 @@
 fit_tmb = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)),
   getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=0), bias.correct=FALSE,
   bias.correct.control=list(sd=FALSE, split=NULL, nsplit=NULL, vars_to_correct=NULL),
-  savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, getReportCovariance=FALSE, getHessian=FALSE,
-  quiet=FALSE, ... ){
+  savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, getReportCovariance=FALSE, getJointPrecision=FALSE,
+  getHessian=FALSE, quiet=FALSE, ... ){
+
+  # Check for issues
+  List = list(...)
+  #if( !is.null(List$jointJointPrecision) ){
+  #  if( getJointPrecision==FALSE & getReportCovariance==TRUE ){
+  #    stop("Some versions of TMB appear to throw an error when `getJointPrecision=TRUE` and `getReportCovariance=FALSE`")
+  #  }
+  #}
 
   # Local function -- combine two lists
   combine_lists = function( default, input ){
@@ -106,14 +114,15 @@ fit_tmb = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf,
         if( BS.control[["nsplit"]] == 1 ) BS.control[["nsplit"]] = NULL
       }
       parameter_estimates[["SD"]] = TMB::sdreport( obj=obj, par.fixed=parameter_estimates$par, hessian.fixed=h, bias.correct=bias.correct,
-        bias.correct.control=BS.control[c("sd","split","nsplit")], getReportCovariance=getReportCovariance, ... )
+        bias.correct.control=BS.control[c("sd","split","nsplit")], getReportCovariance=getReportCovariance,
+        getJointPrecision=getJointPrecision, ... )
     }else{
       if( "ADreportIndex" %in% names(obj$env) ){
         Which = as.vector(unlist( obj$env$ADreportIndex()[ BS.control[["vars_to_correct"]] ] ))
       }else{
         # Run first time to get indices
         parameter_estimates[["SD"]] = TMB::sdreport( obj=obj, par.fixed=parameter_estimates$par, hessian.fixed=h, bias.correct=FALSE,
-           getReportCovariance=FALSE, ... )
+           getReportCovariance=FALSE, getJointPrecision=FALSE, ... )
         # Determine indices
         Which = which( rownames(summary(parameter_estimates[["SD"]],"report")) %in% BS.control[["vars_to_correct"]] )
       }
@@ -126,7 +135,8 @@ fit_tmb = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf,
       # Repeat SD with indexing
       message( paste0("Bias correcting ", length(Which), " derived quantities") )
       parameter_estimates[["SD"]] = TMB::sdreport( obj=obj, par.fixed=parameter_estimates$par, hessian.fixed=h, bias.correct=TRUE,
-        bias.correct.control=list(sd=BS.control[["sd"]], split=Which, nsplit=NULL), getReportCovariance=getReportCovariance, ... )
+        bias.correct.control=list(sd=BS.control[["sd"]], split=Which, nsplit=NULL), getReportCovariance=getReportCovariance,
+        getJointPrecision=getJointPrecision, ... )
     }
     # Update
     parameter_estimates[["Convergence_check"]] = ifelse( parameter_estimates$SD$pdHess==TRUE, parameter_estimates[["Convergence_check"]], "The model is definitely not converged" )

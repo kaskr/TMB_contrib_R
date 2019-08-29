@@ -11,7 +11,7 @@ fit_tmb(obj, fn = obj$fn, gr = obj$gr, startpar = obj$par,
   bias.correct.control = list(sd = FALSE, split = NULL, nsplit = NULL,
   vars_to_correct = NULL), savedir = NULL, loopnum = 3,
   newtonsteps = 0, n = Inf, getReportCovariance = FALSE,
-  getHessian = FALSE, quiet = FALSE, ...)
+  getJointPrecision = FALSE, getHessian = FALSE, quiet = FALSE, ...)
 }
 \arguments{
 \item{obj}{The compiled TMB object}
@@ -48,6 +48,8 @@ fit_tmb(obj, fn = obj$fn, gr = obj$gr, startpar = obj$par,
 
 \item{getReportCovariance}{Get full covariance matrix of ADREPORTed variables?}
 
+\item{getJointPrecision}{Optional. Return full joint precision matrix of random effects and parameters?}
+
 \item{getHessian}{return Hessian for usage in later code}
 
 \item{quiet}{Boolean whether to print additional messages results to terminal}
@@ -55,7 +57,7 @@ fit_tmb(obj, fn = obj$fn, gr = obj$gr, startpar = obj$par,
 \item{...}{list of settings to pass to \code{TMB::sdreport}}
 }
 \value{
-the standard output from \code{nlminb}, except with additional diagnostics and timing info, and a new slot containing the output from \code{sdreport}
+the standard output from \code{nlminb}, except with additional diagnostics and timing info, and a new slot containing the output from \code{TMB::sdreport}
 }
 \description{
 \code{fit_tmb} runs a TMB model and generates standard diagnostics
