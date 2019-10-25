@@ -27,7 +27,7 @@ devtools::install_github("kaskr/TMB_contrib_R/TMBdebug")
 devtools::install_github("kaskr/TMB_contrib_R/TMBphase")
 ```
 
-### [TMBtools](https://github.com/mlysy/TMBtools) -- Tools for developing R packages interfacing with TMB
+### TMBtools -- Tools for developing R packages interfacing with TMB
 
 Provides helper functions for creating packages which contain TMB source code such that:
 
@@ -42,4 +42,4 @@ Install using
 devtools::install_github("mlysy/TMBtools")
 ```
 
-Please see quickstart instructions [here](https://github.com/mlysy/TMBtools) and package vignette [here](http://htmlpreview.github.io/?https://github.com/mlysy/TMBtools/master/doc/TMBtools.html).
+Please see quickstart instructions on project [homepage](https://github.com/mlysy/TMBtools).
