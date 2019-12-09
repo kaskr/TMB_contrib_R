@@ -25,7 +25,7 @@
 #' TMBhelper::Optimize( Obj ) # where Obj is a compiled TMB object
 
 #' @export
-fit_tmb = function( obj, fn=obj$fn, gr=obj$gr, startpar=NULL, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)),
+fit_tmb = function( obj, fn=obj$fn, gr=obj$gr, startpar=NULL, lower=-Inf, upper=Inf,
   getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=0), bias.correct=FALSE,
   bias.correct.control=list(sd=FALSE, split=NULL, nsplit=NULL, vars_to_correct=NULL),
   savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, getReportCovariance=FALSE, getJointPrecision=FALSE,
