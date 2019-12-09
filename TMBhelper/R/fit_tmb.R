@@ -4,7 +4,7 @@
 #' \code{fit_tmb} runs a TMB model and generates standard diagnostics
 #'
 #' @param obj The compiled TMB object
-#' @param startpar Starting values for fixed effects
+#' @param startpar Starting values for fixed effects (default NULL uses \code{obj$par})
 #' @inheritParams stats::nlminb
 #' @inheritParams TMB::sdreport
 #' @param control A list of control parameters. For details see \code{?nlminb}
@@ -25,11 +25,14 @@
 #' TMBhelper::Optimize( Obj ) # where Obj is a compiled TMB object
 
 #' @export
-fit_tmb = function( obj, fn=obj$fn, gr=obj$gr, startpar=obj$par, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)),
+fit_tmb = function( obj, fn=obj$fn, gr=obj$gr, startpar=NULL, lower=rep(-Inf,length(startpar)), upper=rep(Inf,length(startpar)),
   getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=0), bias.correct=FALSE,
   bias.correct.control=list(sd=FALSE, split=NULL, nsplit=NULL, vars_to_correct=NULL),
   savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, getReportCovariance=FALSE, getJointPrecision=FALSE,
   getHessian=FALSE, quiet=FALSE, ... ){
+
+  # Defaults
+  if(is.null(startpar)) startpar = obj$par
 
   # Check for issues
   List = list(...)
