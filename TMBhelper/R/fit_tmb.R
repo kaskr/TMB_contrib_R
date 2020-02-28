@@ -35,6 +35,12 @@ fit_tmb = function( obj, fn=obj$fn, gr=obj$gr, startpar=NULL, lower=-Inf, upper=
   if(is.null(startpar)) startpar = obj$par
 
   # Check for issues
+  if( bias.correct==TRUE & is.null(obj$env$random) ){
+    message( "No random effects detected in TMB model, so overriding user input to `TMBhelper::fit_tmb` to instead specify `bias.correct=FALSE`")
+    bias.correct = FALSE
+  }
+
+  # Check for issues
   List = list(...)
   #if( !is.null(List$jointJointPrecision) ){
   #  if( getJointPrecision==FALSE & getReportCovariance==TRUE ){
