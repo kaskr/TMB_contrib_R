@@ -4,10 +4,9 @@
 \alias{fit_tmb}
 \title{Optimize a TMB model}
 \usage{
-fit_tmb(obj, fn = obj$fn, gr = obj$gr, startpar = obj$par,
-  lower = rep(-Inf, length(startpar)), upper = rep(Inf,
-  length(startpar)), getsd = TRUE, control = list(eval.max = 10000,
-  iter.max = 10000, trace = 0), bias.correct = FALSE,
+fit_tmb(obj, fn = obj$fn, gr = obj$gr, startpar = NULL,
+  lower = -Inf, upper = Inf, getsd = TRUE, control = list(eval.max
+  = 10000, iter.max = 10000, trace = 0), bias.correct = FALSE,
   bias.correct.control = list(sd = FALSE, split = NULL, nsplit = NULL,
   vars_to_correct = NULL), savedir = NULL, loopnum = 3,
   newtonsteps = 0, n = Inf, getReportCovariance = FALSE,
@@ -16,7 +15,7 @@ fit_tmb(obj, fn = obj$fn, gr = obj$gr, startpar = obj$par,
 \arguments{
 \item{obj}{The compiled TMB object}
 
-\item{startpar}{Starting values for fixed effects}
+\item{startpar}{Starting values for fixed effects (default NULL uses \code{obj$par})}
 
 \item{lower}{
     vectors of lower and upper bounds, replicated to be as long as
