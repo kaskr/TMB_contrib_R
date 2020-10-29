@@ -3,5 +3,6 @@
 export(Check_Identifiable)
 export(Optimize)
 export(TMBAIC)
+export(check_estimability)
 export(fit_tmb)
 export(oneStepPredict_deltaModel)

@@ -9,4 +9,4 @@ Maintainer: James Thorson <James.Thorson@noaa.gov>
 Description: Basic functions as suggested and contributed by users and not worth
     making an specific contributed R package
 License: GPL-3
-RoxygenNote: 6.1.0
+RoxygenNote: 7.1.1

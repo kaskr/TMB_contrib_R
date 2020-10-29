@@ -13,7 +13,7 @@ Optimize = function( ... ){
 #'
 #' Included for continuity when using old scripts
 #'
-#' Please use \code{?check_estimability} to see list of arguments and usage
+#' Please use \code{\link{check_estimability}} to see list of arguments and usage
 #' @export
 Check_Identifiable = function( ... ){
   .Deprecated( new="check_estimability" )
