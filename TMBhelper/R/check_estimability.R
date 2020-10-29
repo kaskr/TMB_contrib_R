@@ -1,9 +1,13 @@
 
 #' Check for identifiability of fixed effects
 #'
-#' \code{Check_Identifiable} calculates the matrix of second-derivatives of the marginal likelihood w.r.t. fixed effects, to see if any linear combinations are unidentifiable
+#' \code{check_estimability} calculates the matrix of second-derivatives of the marginal likelihood
+#' w.r.t. fixed effects, to see if any linear combinations are not estimable (i.e. cannot be
+#' uniquely estimated conditional upon model structure and available data, e.g., resulting
+#' in a likelihood ridge and singular, non-invertable Hessian matrix)
 #'
-#' @param obj, The compiled object
+#' @param obj The compiled object
+#' @param h optional argument containing pre-computed Hessian matrix
 #'
 #' @return A tagged list of the hessian and the message
 
@@ -32,7 +36,7 @@ check_estimability = function( obj, h ){
   # Check result
   if( length(List[["WhichBad"]])==0 ){
     # print message
-    message( "All parameters are identifiable" )
+    message( "All parameters are estimable" )
   }else{
     # Check for parameters
     RowMax = apply( List[["Eigen"]]$vectors[,List[["WhichBad"]],drop=FALSE], MARGIN=1, FUN=function(vec){max(abs(vec))} )
