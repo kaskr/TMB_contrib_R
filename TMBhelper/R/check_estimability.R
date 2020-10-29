@@ -19,7 +19,11 @@ check_estimability = function( obj, h ){
 
   # Finite-different hessian
   List = NULL
-  if(missing(h)) List[["Hess"]] = optimHess( par=ParHat, fn=obj$fn, gr=obj$gr )
+  if(missing(h)){
+    List[["Hess"]] = optimHess( par=ParHat, fn=obj$fn, gr=obj$gr )
+  }else{
+    List[["Hess"]] = h
+  }
 
   # Check eigendecomposition
   List[["Eigen"]] = eigen( List[["Hess"]] )
