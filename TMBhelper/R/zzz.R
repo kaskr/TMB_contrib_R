@@ -9,3 +9,13 @@ Optimize = function( ... ){
   fit_tmb( ... )
 }
 
+#' Copy of check_estimability
+#'
+#' Included for continuity when using old scripts
+#'
+#' Please use \code{?check_estimability} to see list of arguments and usage
+#' @export
+Check_Identifiable = function( ... ){
+  .Deprecated( new="check_estimability" )
+  check_estimability( ... )
+}

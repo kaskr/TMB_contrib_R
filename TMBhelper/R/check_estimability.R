@@ -8,7 +8,7 @@
 #' @return A tagged list of the hessian and the message
 
 #' @export
-Check_Identifiable = function( obj ){
+check_estimability = function( obj, h ){
 
   # Extract fixed effects
   ParHat = TMBhelper:::extract_fixed( obj )
@@ -19,7 +19,7 @@ Check_Identifiable = function( obj ){
 
   # Finite-different hessian
   List = NULL
-  List[["Hess"]] = optimHess( par=ParHat, fn=obj$fn, gr=obj$gr )
+  if(missing(h)) List[["Hess"]] = optimHess( par=ParHat, fn=obj$fn, gr=obj$gr )
 
   # Check eigendecomposition
   List[["Eigen"]] = eigen( List[["Hess"]] )
