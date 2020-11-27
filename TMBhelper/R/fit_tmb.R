@@ -25,11 +25,25 @@
 #' TMBhelper::Optimize( Obj ) # where Obj is a compiled TMB object
 
 #' @export
-fit_tmb = function( obj, fn=obj$fn, gr=obj$gr, startpar=NULL, lower=-Inf, upper=Inf,
-  getsd=TRUE, control=list(eval.max=1e4, iter.max=1e4, trace=0), bias.correct=FALSE,
-  bias.correct.control=list(sd=FALSE, split=NULL, nsplit=NULL, vars_to_correct=NULL),
-  savedir=NULL, loopnum=3, newtonsteps=0, n=Inf, getReportCovariance=FALSE, getJointPrecision=FALSE,
-  getHessian=FALSE, quiet=FALSE, ... ){
+fit_tmb = function( obj,
+        fn=obj$fn,
+        gr=obj$gr,
+        startpar=NULL,
+        lower=-Inf,
+        upper=Inf,
+        getsd=TRUE,
+        control=list(eval.max=1e4, iter.max=1e4, trace=0),
+        bias.correct=FALSE,
+        bias.correct.control=list(sd=FALSE, split=NULL, nsplit=NULL, vars_to_correct=NULL),
+        savedir=NULL,
+        loopnum=3,
+        newtonsteps=0,
+        n=Inf,
+        getReportCovariance=FALSE,
+        getJointPrecision=FALSE,
+        getHessian=FALSE,
+        quiet=FALSE,
+        ... ){
 
   # Defaults
   if(is.null(startpar)) startpar = obj$par
@@ -38,6 +52,9 @@ fit_tmb = function( obj, fn=obj$fn, gr=obj$gr, startpar=NULL, lower=-Inf, upper=
   if( bias.correct==TRUE & is.null(obj$env$random) ){
     message( "No random effects detected in TMB model, so overriding user input to `TMBhelper::fit_tmb` to instead specify `bias.correct=FALSE`")
     bias.correct = FALSE
+  }
+  if( getReportCovariance==FALSE ){
+    warning( "For reasons not currently understood, `getReportCovariance=FALSE` sometimes causes an error in `TMB::sdreport`")
   }
 
   # Check for issues

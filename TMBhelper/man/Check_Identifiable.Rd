@@ -10,4 +10,5 @@ Check_Identifiable(...)
 Included for continuity when using old scripts
 }
 \details{
+Please use \code{\link{check_estimability}} to see list of arguments and usage
 }
