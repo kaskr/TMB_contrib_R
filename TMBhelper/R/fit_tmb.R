@@ -3,47 +3,61 @@
 #'
 #' \code{fit_tmb} runs a TMB model and generates standard diagnostics
 #'
-#' @param obj The compiled TMB object
-#' @param startpar Starting values for fixed effects (default NULL uses \code{obj$par})
 #' @inheritParams stats::nlminb
 #' @inheritParams TMB::sdreport
-#' @param control A list of control parameters. For details see \code{?nlminb}
-#' @param getsd Boolean whether to run standard error calculation
-#' @param bias.correct Boolean whether to do epsilon bias-correction
-#' @param bias.correct.control tagged list of options for epsilon bias-correction, where \code{vars_to_correct} is a character-vector of ADREPORT variables that should be bias-corrected
+#' @param obj The compiled TMB object
+#' @param startpar Starting values for fixed effects (default NULL uses \code{obj$par})
+#' @param control A list of control parameters. For details see \code{\link[stats]{nlminb}}
+#' @param getsd Boolean indicating whether to run standard error calculation; see \code{\link[TMB]{sdreport}} for details
+#' @param bias.correct Boolean indicating whether to do epsilon bias-correction;
+#'        see \code{\link[TMB]{sdreport}} and \code{\link[TMBhelper]{fit_tmb}}for details
+#' @param bias.correct.control tagged list of options for epsilon bias-correction,
+#'        where \code{vars_to_correct} is a character-vector of ADREPORT variables that should be bias-corrected
 #' @param savedir directory to save results (if \code{savedir=NULL}, then results aren't saved)
-#' @param loopnum number of times to re-start optimization (where \code{loopnum=3} sometimes achieves a lower final gradient than \code{loopnum=1})
-#' @param newtonsteps number of extra newton steps to take after optimization (alternative to \code{loopnum})
+#' @param loopnum number of times to re-start optimization (where \code{loopnum=3}
+#'        sometimes achieves a lower final gradient than \code{loopnum=1})
+#' @param newtonsteps Integer specifying the number of extra newton steps to take
+#'        after optimization (alternative to \code{loopnum}).
+#'        Each newtonstep requires calculating the Hessian matrix and is therefore slow.
+#'        But for well-behaved models, each Newton step will typically
+#'        decrease the maximum gradient of the loglikelihood with respect to each fixed effect,
+#'        and therefore this option can be used to achieve an arbitrarily low final gradient
+#'        given sufficient time for well-behaved models.  However, this option will also
+#'        perform strangely or have unexpected consequences for poorly-behaved models, e.g.,
+#'        when fixed effects are at upper or lower bounds.
 #' @param n sample sizes (if \code{n!=Inf} then \code{n} is used to calculate BIC and AICc)
 #' @param getHessian return Hessian for usage in later code
 #' @param quiet Boolean whether to print additional messages results to terminal
-#' @param ... list of settings to pass to \code{TMB::sdreport}
+#' @param ... list of settings to pass to \code{\link[TMB]{sdreport}}
 #'
-#' @return the standard output from \code{nlminb}, except with additional diagnostics and timing info, and a new slot containing the output from \code{TMB::sdreport}
-
+#' @return the standard output from \code{\link[stats]{nlminb}}, except with additional diagnostics and timing info,
+#'         and a new slot containing the output from \code{\link[TMB]{sdreport}}
+#'
 #' @examples
-#' TMBhelper::Optimize( Obj ) # where Obj is a compiled TMB object
-
+#' TMBhelper::fit_tmb( Obj ) # where Obj is a compiled TMB object
+#'
+#' @references For more details see \url{https://doi.org/10.1016/j.fishres.2015.11.016}
 #' @export
-fit_tmb = function( obj,
-        fn=obj$fn,
-        gr=obj$gr,
-        startpar=NULL,
-        lower=-Inf,
-        upper=Inf,
-        getsd=TRUE,
-        control=list(eval.max=1e4, iter.max=1e4, trace=0),
-        bias.correct=FALSE,
-        bias.correct.control=list(sd=FALSE, split=NULL, nsplit=NULL, vars_to_correct=NULL),
-        savedir=NULL,
-        loopnum=3,
-        newtonsteps=0,
-        n=Inf,
-        getReportCovariance=FALSE,
-        getJointPrecision=FALSE,
-        getHessian=FALSE,
-        quiet=FALSE,
-        ... ){
+fit_tmb <-
+function( obj,
+          fn = obj$fn,
+          gr = obj$gr,
+          startpar = NULL,
+          lower = -Inf,
+          upper = Inf,
+          getsd = TRUE,
+          control = list(eval.max = 1e4, iter.max = 1e4, trace = 1),
+          bias.correct = FALSE,
+          bias.correct.control = list(sd = FALSE, split = NULL, nsplit = NULL, vars_to_correct = NULL),
+          savedir = NULL,
+          loopnum = 2,
+          newtonsteps = 0,
+          n = Inf,
+          getReportCovariance = FALSE,
+          getJointPrecision = FALSE,
+          getHessian = FALSE,
+          quiet = FALSE,
+          ... ){
 
   # Defaults
   if(is.null(startpar)) startpar = obj$par
@@ -54,7 +68,7 @@ fit_tmb = function( obj,
     bias.correct = FALSE
   }
   if( getReportCovariance==FALSE ){
-    warning( "For reasons not currently understood, `getReportCovariance=FALSE` sometimes causes an error in `TMB::sdreport`")
+    message( "Note that `getReportCovariance=FALSE` causes an error in `TMB::sdreport` when no ADREPORTed variables are present")
   }
 
   # Check for issues
