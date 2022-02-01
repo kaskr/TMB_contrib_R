@@ -76,9 +76,9 @@ function( obj,
   stan_samples = as.array(stan_out)[,1,1:length(obj_random$par)]
 
   # Compile output
-  report_full = objmle$report(samples[1,])[report_names]
-  for( i in 2:nrow(samples)){
-    report_sample = objmle$report(samples[i,])[report_names]
+  report_full = objmle$report(stan_samples[1,])[report_names]
+  for( i in 2:nrow(stan_samples)){
+    report_sample = objmle$report(stan_samples[i,])[report_names]
     for( z in seq_along(report_full) ){
       if(is.vector(report_sample[[z]])){
         report_full[[z]] = cbind( report_full[[z]], report_sample[[z]] )
