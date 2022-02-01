@@ -89,9 +89,18 @@ function( obj,
   }
   run_time = Sys.time() - start_time
 
-  #
+  # Check for issues
+  mon <- rstan::monitor(as.array(stan_out), warmup = 0, print=FALSE)
+  minESS <- min(mon$n_eff)
+  maxRhat <- round(max(mon$Rhat),3)
+  cat(paste0("Minimum ESS=",minESS," (",round(100*minESS/nrow(stan_samples),2),"%), and maximum Rhat=", maxRhat, '\n'))
+  if(minESS<200 | maxRhat > 1.1){
+    warning('Signs of non-convergence found, so do not use results; consider increasing iterations')
+  }
+
   out = list( "stan_out" = stan_out,
               "report_full" = report_full,
-              "run_time" = run_time )
+              "run_time" = run_time,
+              "monitor" = mon )
   return( out )
 }
