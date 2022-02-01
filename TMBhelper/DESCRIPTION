@@ -2,11 +2,14 @@ Package: TMBhelper
 Type: Package
 Title: Package for basic helper functions that are not worth putting in a
     specialized contributed package
-Version: 1.3.0
-Date: 2020-09-15
+Version: 1.4.0
+Date: 2022-01-31
 Authors@R: person("James","Thorson", email="James.Thorson@noaa.gov", role=c("aut","cre"))
 Maintainer: James Thorson <James.Thorson@noaa.gov>
 Description: Basic functions as suggested and contributed by users and not worth
-    making an specific contributed R package
+    making a specific contributed R package
+Imports:
+    abind,
+    tmbstan
 License: GPL-3
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
