@@ -28,6 +28,9 @@
 #' @param n sample sizes (if \code{n!=Inf} then \code{n} is used to calculate BIC and AICc)
 #' @param getHessian return Hessian for usage in later code
 #' @param quiet Boolean whether to print additional messages results to terminal
+#' @param start_time_elapsed how much time has elapsed prior to calling fit_tmb,
+#'        for use, e.g., when calling \code{fit_tmb} multiple times in sequence,
+#'        where \code{start_time_elapsed = opt_previous$time_for_run}
 #' @param ... list of settings to pass to \code{\link[TMB]{sdreport}}
 #'
 #' @return the standard output from \code{\link[stats]{nlminb}}, except with additional diagnostics and timing info,
@@ -57,6 +60,7 @@ function( obj,
           getJointPrecision = FALSE,
           getHessian = FALSE,
           quiet = FALSE,
+          start_time_elapsed = as.difftime("0:0:0"),
           ... ){
 
   # Defaults
@@ -186,7 +190,7 @@ function( obj,
       parameter_estimates[["hessian"]] = h
     }
   }
-  parameter_estimates[["time_for_run"]] = Sys.time() - start_time
+  parameter_estimates[["time_for_run"]] = Sys.time() - start_time + start_time_elapsed
 
   # Save results
   if( !is.null(savedir) ){

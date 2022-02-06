@@ -24,6 +24,7 @@ fit_tmb(
   getJointPrecision = FALSE,
   getHessian = FALSE,
   quiet = FALSE,
+  start_time_elapsed = as.difftime("0:0:0"),
   ...
 )
 }
@@ -78,6 +79,10 @@ when fixed effects are at upper or lower bounds.}
 \item{getHessian}{return Hessian for usage in later code}
 
 \item{quiet}{Boolean whether to print additional messages results to terminal}
+
+\item{start_time_elapsed}{how much time has elapsed prior to calling fit_tmb,
+for use, e.g., when calling \code{fit_tmb} multiple times in sequence,
+where \code{start_time_elapsed = opt_previous$time_for_run}}
 
 \item{...}{list of settings to pass to \code{\link[TMB]{sdreport}}}
 }
